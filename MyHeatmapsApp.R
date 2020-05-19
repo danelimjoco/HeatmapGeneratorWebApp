@@ -39,9 +39,9 @@ ui <- fluidPage(titlePanel(h1("RNA-Seq Shiny App!",align = "center")), theme = s
                                             h3("3. Select Filters"), 
                                             
                                             # Input: Simple integer interval ----
-                                            sliderInput("integer", "Integer:",
+                                            sliderInput("lowCount", textOutput("lowCounts"),
                                                         min = 0, max = 1000,
-                                                        value = 500),
+                                                        value = 100),
                                             
                                             # Input: Decimal interval with step value ----
                                             sliderInput("decimal", "Decimal:",
@@ -84,6 +84,9 @@ server <- function(input, output) {
     read_excel(inFile$datapath)
   })
   
+  output$lowCounts <- renderText({
+    paste0("Eliminate genes with less than ", input$lowCount, " read counts across all samples")
+  })
   
   output$fileUploaded <- reactive({
     return(!is.null(input$countsFile))
