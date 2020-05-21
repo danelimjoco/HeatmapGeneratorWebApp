@@ -60,6 +60,9 @@ ui <- fluidPage(titlePanel(h1("RNA-Seq Shiny App!",align = "center")), theme = s
                                                         value = 50),
                                             
                                             actionButton("sendGeneCount", "Done!", style="color: #	#87CEFA; background-color: #00FF7F; border-color: #2e6da4"),
+                                            br(), #some space
+                                            br(), #some space
+                                            
                                             plotOutput("heatmap"),
                                             align="center"
                            ),
@@ -75,8 +78,12 @@ server <- function(input, output) {
   # Count data
   output$contents <- renderTable({
     inFile <- input$countsFile
-    read_excel(inFile$datapath, range = "A1:D6")
-  })
+    countData <- read_excel(inFile$datapath)
+    countData <- as.data.frame(countData)
+    rownames(countData) <- countData[,1]
+    countData <- countData[,-1]
+    return(countData[1:6,1:4])
+  }, rownames = TRUE)
   
   # Metadata
   output$contents2 <- renderTable({
@@ -137,14 +144,19 @@ server <- function(input, output) {
       file <- input$countsFile
       req(file)
       countData <- read_excel(file$datapath)
-      countData <- countData[rowSums(countData[,-1])>input$lowCount,]
+      
+      countData <- as.data.frame(countData)
+      rownames(countData) <- countData[,1]
+      countData <- countData[,-1]
+
+      countData <- countData[rowSums(countData)>input$lowCount,]
       
       # Metadata
       inFile <- input$metadataFile
       class <- read_excel(inFile$datapath)
       
       #DESeq
-      dds <- DESeqDataSetFromMatrix(countData = countData[,-1], colData = class,
+      dds <- DESeqDataSetFromMatrix(countData = countData, colData = class,
                                     design = formula(~condition)) 
       dds <- DESeq(dds)
       res <- results(dds)
@@ -162,7 +174,8 @@ server <- function(input, output) {
       resSig = resDF[resDF$padj < 0.1,] 
       
       # Store names of top 50 significant DEGs
-      sigGenes <- rownames(resSig[1:input$numGene,])
+      sigGenes <- resSig[order(resSig$pvalue),]
+      sigGenes <- rownames(sigGenes[1:input$numGene,])
       
       ######## RLOG TRANSFORM (NECESSARY FOR CLUSTERING) ########
       
@@ -188,6 +201,10 @@ server <- function(input, output) {
       
       # Don't need row_std column anymore
       ddsRLOG$row_std <- NULL
+      
+      # Z-score outliers (>3 or <-3) can be the same color as 3 and -3 so heatmap isn't washed out
+      ddsRLOG[ddsRLOG>3] <- 3
+      ddsRLOG[ddsRLOG<(-3)] <- -3
       
       # Distance calculation and cluster
       distanceGene <- dist(ddsRLOG, method="manhattan") 
