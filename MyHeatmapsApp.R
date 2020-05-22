@@ -5,71 +5,104 @@ library(readxl)
 
 ######## UI ########
 
-ui <- fluidPage(titlePanel(h1("RNA-Seq Shiny App!",align = "center")), theme = shinytheme("cerulean"),
-                 fluidRow(column(4, align="center", offset=4,
-                                    h3(fileInput("countsFile", "1. Choose count data file (xlsx):",
-                                              multiple = TRUE,
-                                              accept = c("text/csv",
-                                                         "text/comma-separated-values,text/plain",
-                                                         ".csv",
-                                                         ".xlsx")), 
-                                       )
-                                 )
-                           ),
-                           conditionalPanel(condition = "output.fileUploaded", 
-                                            h3("Preview of uploaded data"), 
-                                            tableOutput('contents'), 
-                                            align="center"
-                           ),
-                                            br(), #some space 
-                           conditionalPanel(condition = "output.fileUploaded", 
-                                            h3(fileInput("metadataFile", "2. Choose metadata file (xlsx):",
-                                                         multiple = TRUE,
-                                                         accept = c("text/csv",
-                                                                    "text/comma-separated-values,text/plain",
-                                                                    ".csv",
-                                                                    ".xlsx")),
-                                             ),   
-                                            align="center"
-                           ),
-                                            br(), #some space
-                                            br(), #some space
-                           conditionalPanel(condition = "output.metadataUploaded", 
-                                            h3("3. Filter out low counts"), 
-                                            
-                                            sliderInput("lowCount", textOutput("lowCounts"),
-                                                        min = 0, max = 1000,
-                                                        value = 100),
-                                            
-                                            actionButton("sendLowCount", "Done!", style="color: #	#87CEFA; background-color: #00FF7F; border-color: #2e6da4"),
-                                            
-                                            br(), #some space 
-                                            br(), #some space 
-                                            
-                                            #h4(textOutput("lowCountMsg")),
-                                            h4(textOutput("genesLeft")),
-                                            
-                                            align="center",
-                                            br(), #some space 
-                                          
-                           ), conditionalPanel(condition = "output.lowCountsSelected", 
-                                            h3("4. How many genes do you want to analyze?"), 
-                                                          
-                                            sliderInput("numGene", textOutput("numGenes"),
-                                                        min = 0, max = 100,
-                                                        value = 50),
-                                            
-                                            actionButton("sendGeneCount", "Done!", style="color: #	#87CEFA; background-color: #00FF7F; border-color: #2e6da4"),
-                                            br(), #some space
-                                            br(), #some space
-                                            
-                                            plotOutput("heatmap"),
-                                            align="center"
-                           ),
+ui <- fluidPage(titlePanel(h1("RNA-Seq Shiny App!",align = "center")), 
                 
-                           
+                # Choose theme
+                theme = shinytheme("lumen"),
+                
+                # Panels
+                fluidRow(
+                  column(4,
+                         align="center", 
+                         offset=4,
+                         h3(fileInput("countsFile",
+                                      "1. Choose count data file (xlsx):",
+                                      multiple = TRUE,
+                                      accept = c("text/csv",
+                                                 "text/comma-separated-values,text/plain",
+                                                 ".csv",
+                                                 ".xlsx")
+                                      ), 
+                            )
+                         )
+                         ),
+                
+                # Panel for Count Data Preview
+                conditionalPanel(
+                  condition = "output.fileUploaded",
+                  h3("Preview of uploaded data"),
+                  tableOutput('contents'),
+                  align="center"
+                  ),
+                
+                br(), #some space
+                
+                # Panel for Metadata upload
+                conditionalPanel(
+                  condition = "output.fileUploaded",
+                  h3(fileInput("metadataFile",
+                               "2. Choose metadata file (xlsx):",
+                               multiple = TRUE,
+                               accept = c("text/csv",
+                                          "text/comma-separated-values,text/plain",
+                                          ".csv",
+                                          ".xlsx")
+                               ),
+                     ),
+                  align="center"
+                  ),
+                
+                br(), #some space
+                br(), #some space
+                
+                # Panel for Low Counts Filter
+                conditionalPanel(
+                  condition = "output.metadataUploaded",
+                  h3("3. Filter out low counts"),
+                  sliderInput("lowCount",
+                              textOutput("lowCounts"),
+                              min = 0,
+                              max = 1000,
+                              value = 100),
+                  actionButton("sendLowCount",
+                               "Done!",
+                               style="color: #	#87CEFA; background-color: #00FF7F; border-color: #2e6da4"),
+                 
+                  br(), #some space
+                  br(), #some space
                   
-) # fluidPage
+                  #h4(textOutput("lowCountMsg")),
+                  h4(textOutput("genesLeft")),
+                  align="center",
+                  
+                  br(), #some space
+                  
+                  ),
+                
+                # Panel for selecting Number of Genes to Analyze
+                conditionalPanel(
+                  condition = "output.lowCountsSelected",
+                  h3("4. How many genes do you want to analyze?"),
+                  sliderInput("numGene",
+                              textOutput("numGenes"),
+                              min = 0,
+                              max = 100,
+                              value = 50),
+                  actionButton("sendGeneCount",
+                               "Done!",
+                               style="color: #	#87CEFA; background-color: #00FF7F; border-color: #2e6da4"),
+                  
+                  br(), #some space
+                  br(), #some space
+                  
+                  plotOutput("heatmap"),
+                  br(), #some space
+                  br(), #some space
+          
+                  align="center"
+                  ),
+                ) # fluidPage
+
 
 ######## SERVER ########
 
