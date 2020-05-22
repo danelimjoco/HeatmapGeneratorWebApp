@@ -75,14 +75,20 @@ ui <- fluidPage(titlePanel(h1("RNA-Seq Shiny App!",align = "center")), theme = s
 
 server <- function(input, output) {
   
-  # Count data
-  output$contents <- renderTable({
+  # Save Count Data for later
+  countData <- reactive({
     inFile <- input$countsFile
     countData <- read_excel(inFile$datapath)
     countData <- as.data.frame(countData)
     rownames(countData) <- countData[,1]
     countData <- countData[,-1]
-    return(countData[1:6,1:4])
+    return(countData)
+  })
+  
+  # Preview of Count Data
+  output$contents <- renderTable({
+    preview <- countData()[1:6,1:4]
+    return(preview)
   }, rownames = TRUE)
   
   # Metadata
@@ -128,17 +134,15 @@ server <- function(input, output) {
   # Genes remaining message
   output$genesLeft <- renderText({
     if (input$sendLowCount>0) { 
-      file <- input$countsFile
-      req(file)
-      countData <- read_excel(file$datapath)
+      countData <- countData()
       reducedCountData <- countData[rowSums(countData[,-1])>input$lowCount,]
       return(paste0(nrow(countData)-nrow(reducedCountData)," genes dropped! ", nrow(reducedCountData), " genes left for analysis."))
     }
   })
   
-  # Carry out DESEq analysis, get the top X genes, and make the heatmap upon submit
-  output$heatmap <- renderPlot({
-    if (input$sendGeneCount>0) { 
+  # DESeq calculation, and rlog (longest step, only do once!)
+  ddsRLOG <- reactive({
+    if (input$sendLowCount>0) { 
       
       # Count data
       file <- input$countsFile
@@ -148,7 +152,7 @@ server <- function(input, output) {
       countData <- as.data.frame(countData)
       rownames(countData) <- countData[,1]
       countData <- countData[,-1]
-
+      
       countData <- countData[rowSums(countData)>input$lowCount,]
       
       # Metadata
@@ -173,9 +177,9 @@ server <- function(input, output) {
       # Filter for significant genes by FDR-adjusted p-value threshold
       resSig = resDF[resDF$padj < 0.1,] 
       
-      # Store names of top 50 significant DEGs
+      # Store names of ALL genes ranked by importance
       sigGenes <- resSig[order(resSig$pvalue),]
-      sigGenes <- rownames(sigGenes[1:input$numGene,])
+      sigGenes <- rownames(sigGenes)
       
       ######## RLOG TRANSFORM (NECESSARY FOR CLUSTERING) ########
       
@@ -186,6 +190,30 @@ server <- function(input, output) {
       
       # Convert DESeqTransform object to data frame
       ddsRLOG <- ddsRLOG %>% assay() %>% as.data.frame()
+      
+      # Make a list of 0s to append to the sigGenes
+      zeros<-integer(nrow(ddsRLOG)-length(sigGenes))
+      
+      # Append the 0s
+      sigGenes<-append(sigGenes,zeros)
+      
+      # This matrix now has transformed counts, and sigGenes with appended 0s in last col
+      ddsRLOG <- ddsRLOG %>% add_column(sigGenes)
+      
+      return(ddsRLOG)
+      
+    }
+  })
+  
+  # Make the heatmap (everything here should be quick)
+  output$heatmap <- renderPlot({
+    if (input$sendGeneCount>0) { 
+      
+      ddsRLOG <- ddsRLOG()
+      sigGenes <- ddsRLOG[,ncol(ddsRLOG)]
+      sigGenes<-as.data.frame(sigGenes)
+      sigGenes <- sigGenes[1:input$numGene,]
+      ddsRLOG[,ncol(ddsRLOG)] <- NULL
       
       # Only continue clustering with significant DEGs
       ddsRLOG <- ddsRLOG[rownames(ddsRLOG) %in% sigGenes,]
