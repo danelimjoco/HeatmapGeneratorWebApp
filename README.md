@@ -1,7 +1,7 @@
 # HeatmapGeneratorWebApp
 
 ## Try it out!
-[Heatmaps Web App](https://danelimjoco.shinyapps.io/MyHeatmapsWebApp/)
+[Click Here](https://danelimjoco.shinyapps.io/MyHeatmapsWebApp/) to run the app.
 
 ## Usage
 ### Count data file
