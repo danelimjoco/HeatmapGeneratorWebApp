@@ -1,8 +1,9 @@
 # HeatmapGeneratorWebApp
 
-## Usage
-[Click here](https://danelimjoco.shinyapps.io/MyHeatmapsWebApp/) to try the app!
+## Try it out!
+[Heatmaps Web App](https://danelimjoco.shinyapps.io/MyHeatmapsWebApp/)
 
+## Usage
 ### Count data file
 When prompted to "Choose count data file", upload the countData.xlsx file provided in this repo. 
 
