@@ -1,6 +1,20 @@
 library(shiny)
 library(shinythemes)
 library(readxl)
+library(MLSeq)
+library(DESeq2)
+library(pheatmap)
+library(reshape2)
+library(ggdendro)
+library(gridExtra)
+library(scales)
+library(ggplot2)
+library(gtable)
+library(grid)
+library(xlsx)
+library(tidyverse)
+library(rsconnect)
+
 
 
 ######## UI ########

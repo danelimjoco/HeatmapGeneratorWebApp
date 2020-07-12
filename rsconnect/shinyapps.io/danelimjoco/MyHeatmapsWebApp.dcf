@@ -1,0 +1,12 @@
+name: MyHeatmapsWebApp
+title: MyHeatmapsWebApp
+username:
+account: danelimjoco
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2563016
+bundleId: 3383230
+url: https://danelimjoco.shinyapps.io/MyHeatmapsWebApp/
+when: 1594579831.72055
+asMultiple: FALSE
+asStatic: FALSE
